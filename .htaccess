@@ -1,0 +1,24 @@
+# Safety net, only used when the WHOLE project was uploaded inside public_html
+# (the recommended setup points the domain at public/ and never reads this file).
+# Blocks .env, .git, source code, storage/logs, vendor... and serves the app from public/.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Dotfiles (.env, .git...) — except .well-known, used to renew the SSL certificate.
+    RewriteCond %{REQUEST_URI} !^/\.well-known/
+    RewriteRule (^|/)\. - [F,L]
+    RewriteRule ^(app|bootstrap|config|database|lang|resources|routes|scripts|storage|tests|vendor|hostinger-fallback|node_modules)(/|$) - [F,L]
+    RewriteRule ^(artisan|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|vite\.config\.js|tailwind\.config\.js|postcss\.config\.js|[^/]+\.md)$ - [F,L]
+
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>
+
+# Also inside public/ (whose own rules take over there): never serve .env / .git / .htaccess.
+<FilesMatch "^\.(env|git|ht)">
+    Require all denied
+</FilesMatch>

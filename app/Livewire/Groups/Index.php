@@ -2,8 +2,11 @@
 
 namespace App\Livewire\Groups;
 
+use App\Livewire\Concerns\DropsDeletedReferences;
 use App\Models\Course;
+use App\Models\Enrollment;
 use App\Models\Group;
+use App\Models\ScheduleSlot;
 use App\Models\Student;
 use App\Models\Teacher;
 use Illuminate\Validation\Rule;
@@ -13,7 +16,7 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithPagination;
+    use DropsDeletedReferences, WithPagination;
 
     public const STATUSES = ['نشط', 'جديد', 'متوقف مؤقتاً'];
 
@@ -102,8 +105,8 @@ class Index extends Component
         $group = Group::findOrFail($id);
         $this->editingId = $group->id;
         $this->name = $group->name;
-        $this->course_id = $group->course_id;
-        $this->teacher_id = $group->teacher_id;
+        $this->course_id = $this->existingId(Course::class, $group->course_id);
+        $this->teacher_id = $this->existingId(Teacher::class, $group->teacher_id);
         $this->capacity = (int) $group->capacity;
         $this->room = (string) $group->room;
         $this->schedule = (string) $group->schedule;
@@ -153,7 +156,17 @@ class Index extends Component
     public function delete(): void
     {
         if ($this->confirmingDeleteId) {
-            Group::findOrFail($this->confirmingDeleteId)->delete();
+            $group = Group::findOrFail($this->confirmingDeleteId);
+
+            if (Student::where('group_id', $group->id)->exists() || Enrollment::where('group_id', $group->id)->exists()) {
+                $this->confirmingDeleteId = null;
+                $this->dispatch('toast', message: __('لا يمكن حذف هذه المجموعة لأن فيها طلاباً. انقلهم إلى مجموعة أخرى أولاً، أو غيّر حالتها إلى «متوقف مؤقتاً».'));
+
+                return;
+            }
+
+            ScheduleSlot::where('group_id', $group->id)->delete();
+            $group->delete();
             $this->dispatch('toast', message: __('تم حذف المجموعة بنجاح'));
         }
         $this->confirmingDeleteId = null;

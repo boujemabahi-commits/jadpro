@@ -33,7 +33,7 @@ class Team extends Component
             'name' => ['required', 'string', 'min:2', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->editingId)],
             // Required when creating; optional (leave blank to keep) when editing.
-            'password' => [$this->editingId ? 'nullable' : 'required', 'string', 'min:8'],
+            'password' => [$this->editingId ? 'nullable' : 'required', 'string', 'min:8', 'max:255'],
             'role_id' => ['required', Rule::in($this->assignableRoles()->pluck('id')->all())],
         ];
     }

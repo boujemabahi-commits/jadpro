@@ -45,8 +45,8 @@ class Index extends Component
         return [
             'label' => ['required', 'string', 'min:2', 'max:255'],
             'category' => ['required', Rule::in(Expense::CATEGORIES)],
-            'amount' => ['required', 'integer', 'min:1'],
-            'date' => ['required', 'date'],
+            'amount' => ['required', 'integer', 'min:1', 'max:10000000'],
+            'date' => ['required', 'date', 'after_or_equal:2000-01-01', 'before:2100-01-01'],
             'method' => ['required', Rule::in(Expense::METHODS)],
         ];
     }

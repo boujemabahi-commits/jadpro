@@ -4,8 +4,6 @@
 
 @section('content')
 @php
-    // Enrollment (Phase 4) and attendance (Phase 5) are real; the payments list
-    // and the activity timeline are still Phase 1 placeholders.
     $enrollment = $student->enrollments()->with(['course', 'group'])->latest('date')->latest('id')->first();
     $attendanceHistory = $student->attendanceRecords()->latest('date')->limit(8)->get();
     $financeTone = ['مؤدي' => 'success', 'جزئي' => 'warning', 'غير مؤدي' => 'danger'];
@@ -72,7 +70,9 @@
             <button type="button" x-on:click="tab = 'info'" :class="tab === 'info' ? 'bg-brand-600 text-white' : 'text-ink-500 hover:bg-ink-100'" class="flex-1 whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors">{{ __('المعلومات الشخصية') }}</button>
             <button type="button" x-on:click="tab = 'enrollments'" :class="tab === 'enrollments' ? 'bg-brand-600 text-white' : 'text-ink-500 hover:bg-ink-100'" class="flex-1 whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors">{{ __('التسجيلات') }}</button>
             <button type="button" x-on:click="tab = 'attendance'" :class="tab === 'attendance' ? 'bg-brand-600 text-white' : 'text-ink-500 hover:bg-ink-100'" class="flex-1 whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors">{{ __('الحضور') }}</button>
+            @can('manage-payments')
             <button type="button" x-on:click="tab = 'payments'" :class="tab === 'payments' ? 'bg-brand-600 text-white' : 'text-ink-500 hover:bg-ink-100'" class="flex-1 whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors">{{ __('المدفوعات') }}</button>
+            @endcan
             <button type="button" x-on:click="tab = 'activity'" :class="tab === 'activity' ? 'bg-brand-600 text-white' : 'text-ink-500 hover:bg-ink-100'" class="flex-1 whitespace-nowrap px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors">{{ __('النشاط') }}</button>
         </div>
 
@@ -136,6 +136,7 @@
             </div>
         </div>
 
+        @can('manage-payments')
         <!-- المدفوعات (real — enrollment summary + latest payments with receipts) -->
         <div x-show="tab === 'payments'" class="card overflow-hidden">
             @if ($enrollment)
@@ -165,26 +166,41 @@
                 @endif
             </div>
         </div>
+        @endcan
 
-        <!-- النشاط (mock timeline) -->
+        <!-- النشاط: the student's real history (registration, enrollments, payments, absences), newest first -->
+        @php
+            $activity = collect();
+            if ($student->registered_at) {
+                $activity->push(['date' => $student->registered_at, 'tone' => 'bg-amber-500 ring-amber-100', 'title' => __('إضافة الطالب إلى النظام'), 'meta' => null]);
+            }
+            foreach ($student->enrollments()->with(['course' => fn ($q) => $q->withTrashed(), 'package'])->get() as $en) {
+                $activity->push(['date' => $en->date, 'tone' => 'bg-brand-500 ring-brand-100', 'title' => __('تم تسجيل الطالب في :course', ['course' => $en->course?->name ?? '—']), 'meta' => $en->pack_label]);
+            }
+            if (auth()->user()->can('manage-payments')) {
+                foreach ($student->payments()->latest('date')->limit(20)->get() as $pay) {
+                    $activity->push(['date' => $pay->date, 'tone' => 'bg-emerald-500 ring-emerald-100', 'title' => __('أداء :amount', ['amount' => mad($pay->amount)]), 'meta' => $pay->method]);
+                }
+            }
+            foreach ($student->attendanceRecords()->where('state', '!=', 'حاضر')->latest('date')->limit(20)->get() as $rec) {
+                $activity->push(['date' => $rec->date, 'tone' => $rec->state === 'غائب' ? 'bg-red-500 ring-red-100' : 'bg-blue-500 ring-blue-100', 'title' => __($rec->state), 'meta' => null]);
+            }
+            $activity = $activity->filter(fn ($a) => $a['date'])->sortByDesc(fn ($a) => $a['date']->timestamp)->take(25)->values();
+        @endphp
         <div x-show="tab === 'activity'" class="card p-5">
-            <ol class="relative border-e-2 border-ink-100 me-3 space-y-6">
-                <li class="relative pe-6">
-                    <span class="absolute -end-[9px] top-0 w-4 h-4 rounded-full bg-brand-500 ring-4 ring-brand-100"></span>
-                    <p class="text-sm font-semibold text-ink-800">{{ __('تم تسجيل الطالب في :course', ['course' => $student->course?->name ?? '—']) }}</p>
-                    <p class="ltr-nums text-xs text-ink-400 mt-0.5">{{ $student->registered_at->format('Y-m-d') }}</p>
-                </li>
-                <li class="relative pe-6">
-                    <span class="absolute -end-[9px] top-0 w-4 h-4 rounded-full bg-blue-500 ring-4 ring-blue-100"></span>
-                    <p class="text-sm font-semibold text-ink-800">{{ __('تسجيل حضور الحصة الأولى') }}</p>
-                    <p class="text-xs text-ink-400 mt-0.5">{{ $student->group?->name ?? '—' }}</p>
-                </li>
-                <li class="relative pe-6">
-                    <span class="absolute -end-[9px] top-0 w-4 h-4 rounded-full bg-amber-500 ring-4 ring-amber-100"></span>
-                    <p class="text-sm font-semibold text-ink-800">{{ __('إضافة الطالب إلى النظام') }}</p>
-                    <p class="text-xs text-ink-400 mt-0.5">{{ __('بواسطة :name — مدير المركز', ['name' => auth()->user()?->name]) }}</p>
-                </li>
-            </ol>
+            @if ($activity->isEmpty())
+                <p class="text-sm text-ink-400 text-center py-6">{{ __('لا يوجد نشاط بعد') }}</p>
+            @else
+                <ol class="relative border-e-2 border-ink-100 me-3 space-y-6">
+                    @foreach ($activity as $a)
+                        <li class="relative pe-6">
+                            <span class="absolute -end-[9px] top-0 w-4 h-4 rounded-full ring-4 {{ $a['tone'] }}"></span>
+                            <p class="text-sm font-semibold text-ink-800">{{ $a['title'] }}</p>
+                            <p class="text-xs text-ink-400 mt-0.5"><span class="ltr-nums">{{ $a['date']->format('Y-m-d') }}</span>@if ($a['meta']) · {{ __($a['meta']) }}@endif</p>
+                        </li>
+                    @endforeach
+                </ol>
+            @endif
         </div>
     </div>
 </div>

@@ -24,9 +24,15 @@ class Account extends Component
         return [
             'name' => ['required', 'string', 'min:2', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore(auth()->id())],
-            // Changing the password requires proving the current one.
-            'current_password' => [Rule::requiredIf(fn () => $this->password !== ''), 'nullable', 'current_password'],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            // Changing the password or the sign-in email requires proving the current
+            // password: an open session left on a shared computer must not be enough
+            // to take the account over (new email → password reset).
+            'current_password' => [
+                Rule::requiredIf(fn () => $this->password !== '' || mb_strtolower(trim($this->email)) !== auth()->user()->email),
+                'nullable',
+                'current_password',
+            ],
+            'password' => ['nullable', 'string', 'min:8', 'max:255', 'confirmed'],
         ];
     }
 

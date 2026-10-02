@@ -2,6 +2,9 @@
 
 namespace App\Livewire\Teachers;
 
+use App\Models\Course;
+use App\Models\Group;
+use App\Models\ScheduleSlot;
 use App\Models\Teacher;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -55,7 +58,7 @@ class Index extends Component
             'phone' => ['nullable', 'string', 'max:30'],
             'hours' => ['required', 'integer', 'min:0', 'max:200'],
             'salary_type' => ['required', 'in:'.implode(',', Teacher::SALARY_TYPES)],
-            'fixed_salary' => $isFixed ? ['required', 'integer', 'min:0'] : ['nullable'],
+            'fixed_salary' => $isFixed ? ['required', 'integer', 'min:0', 'max:10000000'] : ['nullable'],
             'commission_rate' => $isFixed ? ['nullable'] : ['required', 'integer', 'between:0,100'],
             'status' => ['required', 'in:'.implode(',', self::STATUSES)],
         ];
@@ -166,7 +169,13 @@ class Index extends Component
     public function delete(): void
     {
         if ($this->confirmingDeleteId) {
-            Teacher::findOrFail($this->confirmingDeleteId)->delete();
+            $teacher = Teacher::findOrFail($this->confirmingDeleteId);
+
+            // Unassign rather than leave courses, groups and sessions pointing at a deleted teacher.
+            foreach ([Course::class, Group::class, ScheduleSlot::class] as $model) {
+                $model::where('teacher_id', $teacher->id)->update(['teacher_id' => null]);
+            }
+            $teacher->delete();
             $this->dispatch('toast', message: __('تم حذف الأستاذ بنجاح'));
         }
         $this->confirmingDeleteId = null;

@@ -59,27 +59,26 @@
 
         <!-- الإشعارات -->
         <div x-show="tab === 'notifications'" class="card p-6">
-            <h3 class="font-bold text-ink-800 mb-5">{{ __('تفضيلات الإشعارات') }}</h3>
+            <h3 class="font-bold text-ink-800 mb-1">{{ __('الإشعارات') }}</h3>
+            <p class="text-xs text-ink-400 mb-5">{{ __('تصل الإشعارات تلقائياً، وكل مستخدم يرى فقط ما يخص صلاحياته.') }}</p>
             <div class="divide-y divide-ink-100">
                 @foreach ([
-                    ['label' => __('تسجيل طالب جديد'), 'desc' => __('إشعار عند إضافة طالب جديد إلى النظام')],
-                    ['label' => __('استلام دفعة'), 'desc' => __('إشعار عند تسجيل دفعة جديدة من طالب')],
-                    ['label' => __('الطلاب غير المؤدين'), 'desc' => __('تذكير أسبوعي بالطلاب المتأخرين عن الدفع')],
-                    ['label' => __('الحصص القادمة'), 'desc' => __('تنبيه قبل بداية كل حصة بـ 30 دقيقة')],
-                ] as $i => $pref)
-                    <div class="flex items-center justify-between py-3.5">
+                    ['label' => __('تسجيل طالب جديد'), 'desc' => __('عند كل تسجيل جديد في دورة'), 'can' => 'manage-enrollments'],
+                    ['label' => __('استلام دفعة'), 'desc' => __('عند تسجيل دفعة جديدة من طالب'), 'can' => 'manage-payments'],
+                    ['label' => __('مصروف جديد'), 'desc' => __('عند تسجيل مصروف جديد'), 'can' => 'manage-expenses'],
+                    ['label' => __('أجور الأساتذة'), 'desc' => __('عند صرف أجرة أستاذ'), 'can' => 'manage-salaries'],
+                ] as $pref)
+                    @php $receives = auth()->user()->can($pref['can']); @endphp
+                    <div class="flex items-center justify-between gap-3 py-3.5">
                         <div>
                             <p class="text-sm font-semibold text-ink-800">{{ $pref['label'] }}</p>
                             <p class="text-xs text-ink-400 mt-0.5">{{ $pref['desc'] }}</p>
                         </div>
-                        <div x-data="{ on: {{ $i < 3 ? 'true' : 'false' }} }">
-                            <button type="button" x-on:click="on = !on" :class="on ? 'bg-brand-600' : 'bg-ink-200'" class="w-11 h-6 rounded-full relative transition-colors" role="switch" :aria-checked="on">
-                                <span class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all" :class="on ? 'start-[22px]' : 'start-0.5'"></span>
-                            </button>
-                        </div>
+                        <x-status-badge :label="$receives ? __('تصلك') : __('لا تخص صلاحياتك')" :tone="$receives ? 'success' : 'neutral'" />
                     </div>
                 @endforeach
             </div>
+            <a href="{{ route('notifications.index') }}" class="btn-secondary mt-5">{{ __('عرض كل الإشعارات') }}</a>
         </div>
 
         <!-- اللغة -->

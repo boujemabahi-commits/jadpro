@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\EnsureTenantUser;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\PreventPageCaching;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -23,7 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
             SetLocale::class,
             EnsureUserIsActive::class,
             PreventPageCaching::class,
+            SecurityHeaders::class,
         ]);
+
+        // A password change (by the user or by the owner in Team) signs out every
+        // other session of that account, on every device.
+        $middleware->authenticateSessions();
 
         // Hostinger serves the site through its own proxy/CDN: trust the forwarded
         // headers so Laravel sees the real https scheme and the visitor's real IP

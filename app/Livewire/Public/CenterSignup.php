@@ -4,6 +4,7 @@ namespace App\Livewire\Public;
 
 use App\Models\CenterSignupRequest;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -43,7 +44,7 @@ class CenterSignup extends Component
                 Rule::unique('center_signup_requests', 'owner_email')->where(fn ($q) => $q->where('status', '!=', 'rejected')),
             ],
             'owner_phone' => ['nullable', 'string', 'max:30'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed'],
         ];
     }
 
@@ -68,6 +69,17 @@ class CenterSignup extends Component
         // Lowercase/trim before validating, so the uniqueness check sees the stored form.
         $this->owner_email = mb_strtolower(trim($this->owner_email));
         $data = $this->validate();
+
+        // A public form: cap it per visitor so nobody can flood the review queue.
+        $key = 'center-signup:'.request()->ip();
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            $this->addError('owner_email', __('محاولات كثيرة. حاول مرة أخرى بعد :minutes دقيقة.', [
+                'minutes' => (int) ceil(RateLimiter::availableIn($key) / 60),
+            ]));
+
+            return;
+        }
+        RateLimiter::hit($key, 3600);
 
         CenterSignupRequest::create([
             'center_name' => trim($data['center_name']),

@@ -21,7 +21,7 @@ class Index extends Component
 
     public function mount(): void
     {
-        if (! $this->date) {
+        if (! $this->validDate($this->date)) {
             $this->date = today()->toDateString();
         }
 
@@ -39,7 +39,7 @@ class Index extends Component
 
     public function updatedDate(): void
     {
-        if (! $this->date) {
+        if (! $this->validDate($this->date)) {
             $this->date = today()->toDateString();
         }
         $this->loadStates();
@@ -59,15 +59,31 @@ class Index extends Component
         }
     }
 
+    protected function validDate(?string $date): bool
+    {
+        return (bool) $date && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) && strtotime($date) !== false;
+    }
+
     public function save(): void
     {
         if (! $this->groupId || ! $this->date) {
             return;
         }
 
-        $tenantId = auth()->user()->tenant_id;
+        // Never trust the client-side state array: only this center's group, a real
+        // date, the group's own students, and the three known states are saved.
+        if (! Group::whereKey($this->groupId)->exists() || ! $this->validDate($this->date)) {
+            return;
+        }
 
-        foreach ($this->states as $studentId => $state) {
+        $tenantId = auth()->user()->tenant_id;
+        $roster = Student::where('group_id', $this->groupId)->pluck('id')->all();
+        $states = array_filter(
+            array_intersect_key($this->states, array_flip($roster)),
+            fn ($state) => in_array($state, AttendanceRecord::STATES, true),
+        );
+
+        foreach ($states as $studentId => $state) {
             // The date cast stores a full datetime, so match on the date part —
             // a plain updateOrCreate(['date' => ...]) would miss and hit the unique index.
             $record = AttendanceRecord::where('student_id', $studentId)

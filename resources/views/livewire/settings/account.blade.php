@@ -23,7 +23,7 @@
 
     <div class="mt-6 pt-6 border-t border-ink-100">
         <h4 class="text-sm font-bold text-ink-800 mb-1">{{ __('تغيير كلمة المرور') }}</h4>
-        <p class="text-xs text-ink-400 mb-4">{{ __('اترك الحقول فارغة إذا كنت لا تريد تغييرها. تغيير كلمة المرور يتطلب إدخال كلمة المرور الحالية.') }}</p>
+        <p class="text-xs text-ink-400 mb-4">{{ __('اترك الحقول فارغة إذا كنت لا تريد تغييرها. تغيير كلمة المرور أو البريد الإلكتروني يتطلب إدخال كلمة المرور الحالية.') }}</p>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
                 <label class="block text-sm font-medium text-ink-700 mb-1.5">{{ __('كلمة المرور الحالية') }}</label>

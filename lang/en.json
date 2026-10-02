@@ -672,5 +672,19 @@
     "باقة بمدة مخصصة": "Custom-length package",
     "يقترح السعر تلقائياً حسب الباقة (قابل للتعديل يدوياً)": "Price is suggested from the package (editable)",
     "إدارة الباقات": "Manage packages",
-    "{1} :count طالب|[0,*] :count طالب": "{1} :count student|[0,*] :count students"
+    "{1} :count طالب|[0,*] :count طالب": "{1} :count student|[0,*] :count students",
+    "لا يمكن حذف هذه الدورة لأنها مرتبطة بطلاب أو مجموعات أو تسجيلات. انقل الطلاب أو غيّر حالتها إلى «متوقف مؤقتاً» بدلاً من الحذف.": "This course can’t be deleted: it is linked to students, groups or enrollments. Move the students or set its status to “Temporarily paused” instead of deleting it.",
+    "لا يمكن حذف هذه المجموعة لأن فيها طلاباً. انقلهم إلى مجموعة أخرى أولاً، أو غيّر حالتها إلى «متوقف مؤقتاً».": "This group can’t be deleted because it has students. Move them to another group first, or set its status to “Temporarily paused”.",
+    "محاولات كثيرة. حاول مرة أخرى بعد :minutes دقيقة.": "Too many attempts. Try again in :minutes min.",
+    "اترك الحقول فارغة إذا كنت لا تريد تغييرها. تغيير كلمة المرور أو البريد الإلكتروني يتطلب إدخال كلمة المرور الحالية.": "Leave the fields empty to keep them. Changing the password or the email requires your current password.",
+    "أداء :amount": "Payment of :amount",
+    "لا يوجد نشاط بعد": "No activity yet",
+    "تصل الإشعارات تلقائياً، وكل مستخدم يرى فقط ما يخص صلاحياته.": "Notifications arrive automatically; each user only sees those matching their permissions.",
+    "عند كل تسجيل جديد في دورة": "On every new course enrollment",
+    "عند تسجيل دفعة جديدة من طالب": "When a student payment is recorded",
+    "مصروف جديد": "New expense",
+    "عند تسجيل مصروف جديد": "When an expense is recorded",
+    "عند صرف أجرة أستاذ": "When a teacher’s salary is paid",
+    "تصلك": "You receive these",
+    "لا تخص صلاحياتك": "Not in your permissions"
 }

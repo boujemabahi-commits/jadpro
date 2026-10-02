@@ -44,7 +44,7 @@ class Index extends Component
             'student_id' => ['required', Rule::exists('students', 'id')->where('tenant_id', $tenantId)->whereNull('deleted_at')],
             'amount' => ['required', 'integer', 'min:1', 'max:'.max(1, $max)],
             'method' => ['required', Rule::in(Payment::METHODS)],
-            'date' => ['required', 'date'],
+            'date' => ['required', 'date', 'after_or_equal:2000-01-01', 'before:2100-01-01'],
         ];
     }
 
