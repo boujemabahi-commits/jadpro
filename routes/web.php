@@ -12,6 +12,7 @@ use App\Livewire\Enrollments\Index as EnrollmentsIndex;
 use App\Livewire\Expenses\Index as ExpensesIndex;
 use App\Livewire\Groups\Index as GroupsIndex;
 use App\Livewire\Notifications\Index as NotificationsIndex;
+use App\Livewire\Packages\Index as PackagesIndex;
 use App\Livewire\Payments\Index as PaymentsIndex;
 use App\Livewire\Public\CenterSignup;
 use App\Livewire\Salaries\Index as SalariesIndex;
@@ -69,6 +70,7 @@ Route::middleware(['auth', 'tenant-user'])->group(function () {
     });
 
     Route::get('/enrollments', EnrollmentsIndex::class)->middleware('permission:manage-enrollments')->name('enrollments.index');
+    Route::get('/packages', PackagesIndex::class)->middleware('permission:manage-enrollments')->name('packages.index');
     Route::get('/attendance', AttendanceIndex::class)->middleware('permission:manage-attendance')->name('attendance.index');
     Route::get('/schedule', ScheduleIndex::class)->middleware('permission:manage-schedule')->name('schedule.index');
 

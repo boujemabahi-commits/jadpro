@@ -11,6 +11,7 @@
                 ['label' => __('الدورات'), 'href' => '/courses', 'icon' => 'book-open', 'can' => 'manage-courses-groups-teachers'],
                 ['label' => __('المجموعات'), 'href' => '/groups', 'icon' => 'users-round', 'can' => 'manage-courses-groups-teachers'],
                 ['label' => __('التسجيلات'), 'href' => '/enrollments', 'icon' => 'clipboard-list', 'can' => 'manage-enrollments'],
+                ['label' => __('الباقات'), 'href' => '/packages', 'icon' => 'package', 'can' => 'manage-enrollments'],
                 ['label' => __('الحضور'), 'href' => '/attendance', 'icon' => 'calendar-check', 'can' => 'manage-attendance'],
                 ['label' => __('الجدول'), 'href' => '/schedule', 'icon' => 'calendar-days', 'can' => 'manage-schedule'],
             ],

@@ -35,6 +35,14 @@
             @endforeach
             <option value="overdue">{{ __('متأخرون عن الأداء') }}</option>
         </select>
+        <select class="select sm:w-44" wire:model.live="planFilter">
+            <option value="">{{ __('كل أنواع الاشتراك') }}</option>
+            <option value="monthly">{{ __('دفع شهري') }}</option>
+            <option value="pack">{{ __('كل الباقات') }}</option>
+            @foreach ($allPackages as $pk)
+                <option value="{{ $pk->id }}">{{ $pk->name }}</option>
+            @endforeach
+        </select>
     </x-filter-bar>
 
     <div class="card overflow-hidden relative">
@@ -76,7 +84,7 @@
                             <td class="table-cell">{{ $r->group?->name ?? '—' }}</td>
                             <td class="table-cell ltr-nums">{{ $r->date->format('Y-m-d') }}</td>
                             <td class="table-cell">
-                                <span class="inline-flex items-center rounded-full bg-ink-50 px-2.5 py-1 text-[11px] font-semibold text-ink-600">{{ $r->pack_label }}</span>
+                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $r->is_pack ? 'bg-violet-50 text-violet-700' : 'bg-ink-50 text-ink-600' }}">@if ($r->is_pack)<x-icon name="package" class="w-3 h-3" />@endif{{ $r->pack_label }}</span>
                             </td>
                             <td class="table-cell">
                                 @if ($r->due_date)
@@ -122,7 +130,7 @@
                         <x-status-badge :label="$r->status" :tone="$statusTone[$r->status] ?? 'neutral'" />
                     </div>
                     <div class="flex items-center gap-2 mb-1.5">
-                        <span class="inline-flex items-center rounded-full bg-ink-50 px-2.5 py-1 text-[11px] font-semibold text-ink-600">{{ $r->pack_label }}</span>
+                        <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $r->is_pack ? 'bg-violet-50 text-violet-700' : 'bg-ink-50 text-ink-600' }}">@if ($r->is_pack)<x-icon name="package" class="w-3 h-3" />@endif{{ $r->pack_label }}</span>
                     </div>
                     <div class="flex items-center justify-between text-xs text-ink-500 ltr-nums">
                         <span>{{ $r->date->format('Y-m-d') }}</span>
@@ -238,13 +246,28 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-ink-700 mb-1.5">{{ __('نوع الاشتراك') }}</label>
-                        <select class="select" wire:model.live="duration_months">
-                            @foreach ($packOptions as $months => $label)
-                                <option value="{{ $months }}">{{ __($label) }}</option>
-                            @endforeach
+                        <select class="select" wire:model.live="plan">
+                            <option value="m">{{ __('دفع شهري') }}</option>
+                            @if ($packages->isNotEmpty())
+                                <optgroup label="{{ __('باقات المركز') }}">
+                                    @foreach ($packages as $pk)
+                                        <option value="p{{ $pk->id }}">{{ $pk->name }} — {{ $pk->duration_label }} · {{ mad($pk->priceFor($selectedCourse)) }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
+                            <optgroup label="{{ __('باقة بمدة مخصصة') }}">
+                                @foreach ($packOptions as $months => $label)
+                                    @continue ($months === 1)
+                                    <option value="d{{ $months }}">{{ __($label) }}</option>
+                                @endforeach
+                            </optgroup>
                         </select>
-                        <p class="text-[11px] text-ink-400 mt-1">{{ __('يقترح السعر تلقائياً حسب مدة الباقة (قابل للتعديل يدوياً)') }}</p>
+                        <p class="text-[11px] text-ink-400 mt-1">
+                            {{ __('يقترح السعر تلقائياً حسب الباقة (قابل للتعديل يدوياً)') }}
+                            @can('manage-enrollments') · <a href="{{ route('packages.index') }}" class="text-brand-600 font-semibold" target="_blank">{{ __('إدارة الباقات') }}</a> @endcan
+                        </p>
                         @error('duration_months') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                        @error('package_id') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
