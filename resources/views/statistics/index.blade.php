@@ -93,19 +93,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 { label: {!! json_encode(__('الإجمالي'), JSON_UNESCAPED_UNICODE) !!}, data: {!! json_encode($growth['total']) !!}, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.08)', fill: true, tension: 0.35 },
             ],
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { reverse: true } } },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { reverse: {{ \App\Support\Locales::direction() === 'rtl' ? 'true' : 'false' }} } } },
     });
 
     new Chart(document.getElementById('enrollmentTrendChart'), {
         type: 'bar',
         data: { labels: growthLabels, datasets: [{ label: {!! json_encode(__('تسجيلات جديدة'), JSON_UNESCAPED_UNICODE) !!}, data: {!! json_encode($enrollments['count']) !!}, backgroundColor: '#8b5cf6', borderRadius: 6 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { reverse: true } } },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { reverse: {{ \App\Support\Locales::direction() === 'rtl' ? 'true' : 'false' }} } } },
     });
 
     new Chart(document.getElementById('revenueTrendChart'), {
         type: 'line',
         data: { labels: revenueLabels, datasets: [{ label: {!! json_encode(__('الإيرادات'), JSON_UNESCAPED_UNICODE) !!}, data: {!! json_encode($revenue['revenue']) !!}, borderColor: '#059669', backgroundColor: 'rgba(5,150,105,.12)', fill: true, tension: 0.35 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { reverse: true } } },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { reverse: {{ \App\Support\Locales::direction() === 'rtl' ? 'true' : 'false' }} } } },
     });
 
     new Chart(document.getElementById('collectionRateChart'), {

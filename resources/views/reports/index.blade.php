@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { position: 'bottom', rtl: {{ \App\Support\Locales::direction() === 'rtl' ? 'true' : 'false' }}, labels: { font: { family: 'Cairo' } } } },
-            scales: { y: { beginAtZero: true }, x: { reverse: true } },
+            scales: { y: { beginAtZero: true }, x: { reverse: {{ \App\Support\Locales::direction() === 'rtl' ? 'true' : 'false' }} } },
         },
     });
 });

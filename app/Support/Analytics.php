@@ -77,7 +77,7 @@ class Analytics
             ['label' => __('الأساتذة'), 'value' => Teacher::count(), 'icon' => 'graduation-cap', 'tone' => 'blue', 'trend' => null],
             ['label' => __('الدورات'), 'value' => Course::count(), 'icon' => 'book-open', 'tone' => 'violet', 'trend' => null],
             ['label' => __('المجموعات'), 'value' => Group::count(), 'icon' => 'users-round', 'tone' => 'amber', 'trend' => null],
-            ['label' => __('الطلاب غير المؤدين'), 'value' => Student::where('financial_status', 'غير مؤدي')->count(), 'icon' => 'triangle-alert', 'tone' => 'rose', 'trend' => null],
+            ['key' => 'unpaid', 'label' => __('الطلاب غير المؤدين'), 'value' => Student::where('financial_status', 'غير مؤدي')->count(), 'icon' => 'triangle-alert', 'tone' => 'rose', 'trend' => null],
             ['label' => __('التسجيلات هذا الشهر'), 'value' => $enrollmentsThisMonth, 'icon' => 'clipboard-list', 'tone' => 'brand', 'trend' => self::pctChange($enrollmentsLastMonth, $enrollmentsThisMonth)],
         ];
     }

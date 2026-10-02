@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\EnsureTenantUser;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\PreventPageCaching;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,7 +22,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             SetLocale::class,
             EnsureUserIsActive::class,
+            PreventPageCaching::class,
         ]);
+
+        // Hostinger serves the site through its own proxy/CDN: trust the forwarded
+        // headers so Laravel sees the real https scheme and the visitor's real IP
+        // (the login rate-limit is per IP — behind a proxy every visitor shared one).
+        $middleware->trustProxies(at: '*');
 
         $middleware->alias([
             'platform-admin' => EnsurePlatformAdmin::class,

@@ -5,6 +5,7 @@ namespace App\Livewire\Students;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Student;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -56,7 +57,8 @@ class Index extends Component
             'phone' => ['required', 'string', 'max:30'],
             'city' => ['nullable', 'string', 'max:255'],
             'guardian_phone' => ['nullable', 'string', 'max:30'],
-            'course_id' => ['nullable', 'exists:courses,id'],
+            // Only a course of the signed-in user's own center (never another center's id).
+            'course_id' => ['nullable', Rule::exists('courses', 'id')->where('tenant_id', auth()->user()->tenant_id)->whereNull('deleted_at')],
             'enrollment_status' => ['required', 'in:نشط,متوقف'],
             'financial_status' => ['required', 'in:مؤدي,جزئي,غير مؤدي'],
         ];
@@ -80,6 +82,9 @@ class Index extends Component
         $editId = request()->integer('edit');
         if ($editId) {
             $this->openEdit($editId);
+        } elseif (request()->boolean('add')) {
+            // "إضافة طالب" buttons (header, dashboard) open the form directly.
+            $this->openCreate();
         }
     }
 

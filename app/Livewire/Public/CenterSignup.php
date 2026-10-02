@@ -65,6 +65,8 @@ class CenterSignup extends Component
 
     public function submit(): void
     {
+        // Lowercase/trim before validating, so the uniqueness check sees the stored form.
+        $this->owner_email = mb_strtolower(trim($this->owner_email));
         $data = $this->validate();
 
         CenterSignupRequest::create([

@@ -21,12 +21,14 @@ class Index extends Component
 
     public function markRead(int $id): void
     {
-        Notification::visibleTo(auth()->user())->whereKey($id)->update(['read' => true]);
+        $user = auth()->user();
+        Notification::markReadFor($user, Notification::visibleTo($user)->whereKey($id)->pluck('notifications.id')->all());
     }
 
     public function markAllRead(): void
     {
-        $count = Notification::visibleTo(auth()->user())->unread()->update(['read' => true]);
+        $user = auth()->user();
+        $count = Notification::markReadFor($user, Notification::visibleTo($user)->unreadBy($user)->pluck('notifications.id')->all());
         $this->dispatch('toast', message: $count ? __('تم تعليم الكل كمقروء') : __('لا توجد إشعارات غير مقروءة'));
     }
 
@@ -35,13 +37,13 @@ class Index extends Component
         $user = auth()->user();
 
         $notifications = Notification::visibleTo($user)
-            ->when($this->unreadOnly, fn ($q) => $q->unread())
+            ->when($this->unreadOnly, fn ($q) => $q->unreadBy($user))
             ->latest()->latest('id')
             ->paginate(20);
 
         return view('livewire.notifications.index', [
             'notifications' => $notifications,
-            'unread' => Notification::visibleTo($user)->unread()->count(),
+            'unread' => Notification::visibleTo($user)->unreadBy($user)->count(),
         ])->extends('layouts.app')->section('content')->title(__('الإشعارات'));
     }
 }
