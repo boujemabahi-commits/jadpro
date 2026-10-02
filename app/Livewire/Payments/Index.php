@@ -144,6 +144,7 @@ class Index extends Component
             'icon' => 'wallet',
             'tone' => 'blue',
             'category' => __('المالية'),
+            'permission' => 'manage-payments',
         ]);
 
         $this->dispatch('notification-created');

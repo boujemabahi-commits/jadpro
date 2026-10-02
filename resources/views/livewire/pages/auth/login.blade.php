@@ -11,6 +11,9 @@ new #[Layout('layouts.guest')] class extends Component
 
     public function login(): void
     {
+        // Phones often capitalise the first letter or add a trailing space after the email.
+        $this->form->email = mb_strtolower(trim($this->form->email));
+
         $this->validate();
 
         $this->form->authenticate();

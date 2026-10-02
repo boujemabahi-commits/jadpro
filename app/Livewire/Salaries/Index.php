@@ -46,6 +46,7 @@ class Index extends Component
             'icon' => 'banknote',
             'tone' => 'brand',
             'category' => __('المالية'),
+            'permission' => 'manage-salaries',
         ]);
 
         $this->dispatch('notification-created');

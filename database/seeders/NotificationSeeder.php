@@ -32,7 +32,7 @@ class NotificationSeeder extends Seeder
             foreach ($this->items as $item) {
                 $at = now()->sub($item['ago']);
 
-                Notification::create([
+                $n = Notification::create([
                     'tenant_id' => $tenant->id,
                     'user_id' => null,
                     'title' => $item['title'],
@@ -40,10 +40,17 @@ class NotificationSeeder extends Seeder
                     'icon' => $item['icon'],
                     'tone' => $item['tone'],
                     'category' => $item['category'],
-                    'read' => $item['read'],
+                    'permission' => ['wallet' => 'manage-payments', 'banknote' => 'manage-salaries', 'receipt' => 'manage-expenses'][$item['icon']] ?? null,
                     'created_at' => $at,
                     'updated_at' => $at,
                 ]);
+
+                if ($item['read']) {
+                    $userIds = \App\Models\User::withoutGlobalScopes()->where('tenant_id', $tenant->id)->pluck('id')->all();
+                    \Illuminate\Support\Facades\DB::table('notification_reads')->insertOrIgnore(
+                        array_map(fn ($uid) => ['notification_id' => $n->id, 'user_id' => $uid, 'read_at' => $at], $userIds)
+                    );
+                }
             }
         });
     }

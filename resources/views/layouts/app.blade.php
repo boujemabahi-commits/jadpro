@@ -32,20 +32,34 @@
     <x-toast-container />
 
     <x-modal id="search-modal" :title="__('البحث الشامل')" max-width="lg">
-        <div class="relative mb-4">
-            <span class="absolute inset-y-0 start-0 flex items-center ps-3 text-ink-400"><x-icon name="search" class="w-4 h-4" /></span>
-            <input type="text" autofocus class="input" placeholder="{{ __('ابحث عن طالب، أستاذ، دورة، مجموعة...') }}" />
-        </div>
+        {{-- البحث يفتح قائمة الطلاب مفلترة بالاسم/الهاتف (كان الحقل لا يفعل شيئاً) --}}
+        @can('manage-students')
+            <form method="GET" action="/students" class="relative mb-4">
+                <span class="absolute inset-y-0 start-0 flex items-center ps-3 text-ink-400"><x-icon name="search" class="w-4 h-4" /></span>
+                <input type="search" name="q" autofocus class="input" placeholder="{{ __('ابحث عن طالب بالاسم أو الهاتف...') }}" />
+            </form>
+        @endcan
         <p class="text-xs font-semibold text-ink-400 mb-2">{{ __('روابط سريعة') }}</p>
         <div class="space-y-1">
-            <x-menu-item icon="users" href="/students">{{ __('الطلاب') }}</x-menu-item>
-            <x-menu-item icon="graduation-cap" href="/teachers">{{ __('الأساتذة') }}</x-menu-item>
-            <x-menu-item icon="book-open" href="/courses">{{ __('الدورات') }}</x-menu-item>
-            <x-menu-item icon="calendar-days" href="/schedule">{{ __('الجدول') }}</x-menu-item>
-            <x-menu-item icon="wallet" href="/payments">{{ __('أداءات الطلاب') }}</x-menu-item>
+            @can('manage-students') <x-menu-item icon="users" href="/students">{{ __('الطلاب') }}</x-menu-item> @endcan
+            @can('manage-courses-groups-teachers') <x-menu-item icon="graduation-cap" href="/teachers">{{ __('الأساتذة') }}</x-menu-item> @endcan
+            @can('manage-courses-groups-teachers') <x-menu-item icon="book-open" href="/courses">{{ __('الدورات') }}</x-menu-item> @endcan
+            @can('manage-schedule') <x-menu-item icon="calendar-days" href="/schedule">{{ __('الجدول') }}</x-menu-item> @endcan
+            @can('manage-payments') <x-menu-item icon="wallet" href="/payments">{{ __('أداءات الطلاب') }}</x-menu-item> @endcan
+            @can('manage-expenses') <x-menu-item icon="receipt" href="/expenses">{{ __('المصاريف') }}</x-menu-item> @endcan
+            <x-menu-item icon="settings" href="/settings">{{ __('الإعدادات') }}</x-menu-item>
         </div>
     </x-modal>
 
+    <script>
+        // Ctrl+K / ⌘K opens the global search (the shortcut was shown in the header but did nothing).
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                window.dispatchEvent(new CustomEvent('open-search-modal'));
+            }
+        });
+    </script>
     <script defer src="/vendor/chart.js"></script>
     @livewireScripts
     @yield('scripts')

@@ -8,27 +8,32 @@
 @endphp
 
 <x-page-header :title="__('مرحباً بك مجدداً، :name 👋', ['name' => auth()->user()->name])" :subtitle="__('إليك نظرة سريعة على نشاط مركزك اليوم — :date', ['date' => ar_date()])">
-    @can('manage-students') <a href="/students" class="btn-secondary"><x-icon name="plus" class="w-4 h-4" /> {{ __('إضافة طالب') }}</a> @endcan
+    @can('manage-students') <a href="/students?add=1" class="btn-secondary"><x-icon name="plus" class="w-4 h-4" /> {{ __('إضافة طالب') }}</a> @endcan
     @can('manage-enrollments') <a href="/enrollments" class="btn-primary"><x-icon name="clipboard-list" class="w-4 h-4" /> {{ __('تسجيل جديد') }}</a> @endcan
 </x-page-header>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 {{ count($stats) >= 6 ? 'xl:grid-cols-6' : 'xl:grid-cols-5' }} gap-4 mb-6">
     @foreach ($stats as $s)
         <x-stat-card :icon="$s['icon']" :label="$s['label']" :value="$s['value']" :tone="$s['tone']" :trend="$s['trend']" />
     @endforeach
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-    <div class="lg:col-span-2">
-        <x-chart-container id="dashboardRevenueChart" :title="__('نظرة عامة على الإيرادات')" :subtitle="__('الإيرادات والمصاريف — آخر 6 أشهر')">
-            <span class="text-xs font-semibold text-ink-400">MAD</span>
-        </x-chart-container>
+    @if ($revenue)
+        <div class="lg:col-span-2">
+            <x-chart-container id="dashboardRevenueChart" :title="__('نظرة عامة على الإيرادات')" :subtitle="__('الإيرادات والمصاريف — آخر 6 أشهر')">
+                <span class="text-xs font-semibold text-ink-400">MAD</span>
+            </x-chart-container>
+        </div>
+    @endif
+    <div class="{{ $revenue ? '' : 'lg:col-span-3' }}">
+        <x-chart-container id="dashboardGrowthChart" :title="__('نمو الطلاب')" :subtitle="__('آخر 6 أشهر')" />
     </div>
-    <x-chart-container id="dashboardGrowthChart" :title="__('نمو الطلاب')" :subtitle="__('آخر 6 أشهر')" />
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
     <!-- Recent enrollments -->
+    @if ($recentEnrollments !== null)
     <div class="lg:col-span-2 card overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-ink-100">
             <h3 class="text-sm font-bold text-ink-800">{{ __('أحدث التسجيلات') }}</h3>
@@ -49,7 +54,7 @@
                     @forelse ($recentEnrollments as $r)
                         <tr class="hover:bg-ink-50/70 transition-colors">
                             <td class="table-cell">
-                                <a href="/students/{{ $r->student_id }}" class="flex items-center gap-2.5 group">
+                                <a @can('manage-students') href="/students/{{ $r->student_id }}" @endcan class="flex items-center gap-2.5 group">
                                     <x-avatar :name="$r->student?->name ?? '—'" size="sm" />
                                     <span class="font-semibold text-ink-800 group-hover:text-brand-700">{{ $r->student?->name ?? '—' }}</span>
                                 </a>
@@ -67,7 +72,7 @@
         </div>
         <div class="sm:hidden divide-y divide-ink-100">
             @forelse ($recentEnrollments as $r)
-                <a href="/students/{{ $r->student_id }}" class="p-4 flex items-center gap-3">
+                <a @can('manage-students') href="/students/{{ $r->student_id }}" @endcan class="p-4 flex items-center gap-3">
                     <x-avatar :name="$r->student?->name ?? '—'" size="sm" />
                     <div class="flex-1 min-w-0">
                         <p class="font-semibold text-ink-800 truncate">{{ $r->student?->name ?? '—' }}</p>
@@ -81,8 +86,10 @@
         </div>
     </div>
 
+    @endif
+
     <!-- Upcoming classes -->
-    <div class="card overflow-hidden">
+    <div class="card overflow-hidden {{ $recentEnrollments === null ? 'lg:col-span-3' : '' }}">
         <div class="flex items-center justify-between px-5 py-4 border-b border-ink-100">
             <h3 class="text-sm font-bold text-ink-800">{{ __('الحصص القادمة اليوم') }}</h3>
             @can('manage-schedule') <a href="/schedule" class="text-xs font-semibold text-brand-600 hover:text-brand-700">{{ __('الجدول') }}</a> @endcan
@@ -109,7 +116,7 @@
 <div class="card p-5">
     <h3 class="text-sm font-bold text-ink-800 mb-4">{{ __('إجراءات سريعة') }}</h3>
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        @can('manage-students') <x-quick-action-card icon="user-round-plus" :label="__('إضافة طالب')" href="/students" tone="brand" /> @endcan
+        @can('manage-students') <x-quick-action-card icon="user-round-plus" :label="__('إضافة طالب')" href="/students?add=1" tone="brand" /> @endcan
         @can('manage-courses-groups-teachers') <x-quick-action-card icon="graduation-cap" :label="__('إضافة أستاذ')" href="/teachers" tone="blue" /> @endcan
         @can('manage-courses-groups-teachers') <x-quick-action-card icon="book-open" :label="__('إنشاء دورة')" href="/courses" tone="violet" /> @endcan
         @can('manage-courses-groups-teachers') <x-quick-action-card icon="users-round" :label="__('إنشاء مجموعة')" href="/groups" tone="amber" /> @endcan
@@ -125,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!window.Chart) return;
     Chart.defaults.font.family = 'Cairo';
 
+    @if ($revenue)
     const months = {!! json_encode($revenue['labels'], JSON_UNESCAPED_UNICODE) !!};
 
     new Chart(document.getElementById('dashboardRevenueChart'), {
@@ -139,9 +147,11 @@ document.addEventListener('DOMContentLoaded', () => {
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { position: 'bottom' } },
-            scales: { y: { beginAtZero: true }, x: { reverse: true } },
+            scales: { y: { beginAtZero: true }, x: { reverse: {{ \App\Support\Locales::direction() === 'rtl' ? 'true' : 'false' }} } },
         },
     });
+
+    @endif
 
     new Chart(document.getElementById('dashboardGrowthChart'), {
         type: 'line',
@@ -152,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { x: { reverse: true } },
+            scales: { x: { reverse: {{ \App\Support\Locales::direction() === 'rtl' ? 'true' : 'false' }} } },
         },
     });
 });

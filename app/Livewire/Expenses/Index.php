@@ -126,6 +126,7 @@ class Index extends Component
                 'icon' => 'receipt',
                 'tone' => 'rose',
                 'category' => __('المالية'),
+                'permission' => 'manage-expenses',
             ]);
             $this->dispatch('notification-created');
             $this->dispatch('toast', message: __('تمت إضافة المصروف بنجاح'));

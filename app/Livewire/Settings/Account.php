@@ -50,6 +50,7 @@ class Account extends Component
 
     public function save(): void
     {
+        $this->email = mb_strtolower(trim($this->email));
         $data = $this->validate();
 
         $user = auth()->user();

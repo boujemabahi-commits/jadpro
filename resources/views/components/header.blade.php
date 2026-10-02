@@ -18,10 +18,12 @@
     </button>
 
     <div class="flex items-center gap-1.5 sm:gap-2 ms-auto">
-        <a href="/students" class="btn-primary hidden md:inline-flex">
-            <x-icon name="plus" class="w-4 h-4" />
-            {{ __('إضافة طالب') }}
-        </a>
+        @can('manage-students')
+            <a href="/students?add=1" class="btn-primary hidden md:inline-flex">
+                <x-icon name="plus" class="w-4 h-4" />
+                {{ __('إضافة طالب') }}
+            </a>
+        @endcan
 
         <livewire:notifications.bell />
 

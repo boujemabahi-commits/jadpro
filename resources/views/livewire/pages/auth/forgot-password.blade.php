@@ -10,6 +10,7 @@ new #[Layout('layouts.guest', ['title' => 'نسيت كلمة المرور؟'])] 
 
     public function sendResetLink(): void
     {
+        $this->email = mb_strtolower(trim($this->email));
         $this->validate(['email' => ['required', 'string', 'email']]);
 
         Password::sendResetLink($this->only('email'));

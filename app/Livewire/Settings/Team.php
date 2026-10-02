@@ -113,6 +113,8 @@ class Team extends Component
     public function save(): void
     {
         $this->authorizeManage();
+        $this->name = trim($this->name);
+        $this->email = mb_strtolower(trim($this->email));
         $data = $this->validate();
         $role = Role::findOrFail((int) $data['role_id']);
 

@@ -60,6 +60,18 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Emails are stored lowercase and without surrounding spaces, so "Sara@X.com " typed on a
+     * phone (auto-capitalised first letter, trailing space after autocomplete) is the same
+     * account as "sara@x.com" — whatever the database collation.
+     */
+    protected function email(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            set: fn ($value) => $value === null ? null : mb_strtolower(trim((string) $value)),
+        );
+    }
+
     /** The SaaS operator's own staff: no tenant, no roles, only the /admin area. */
     public function isPlatformAdmin(): bool
     {

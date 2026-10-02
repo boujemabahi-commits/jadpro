@@ -16,7 +16,8 @@ class Bell extends Component
 
     public function markRead(int $id): void
     {
-        Notification::visibleTo(auth()->user())->whereKey($id)->update(['read' => true]);
+        $user = auth()->user();
+        Notification::markReadFor($user, Notification::visibleTo($user)->whereKey($id)->pluck('notifications.id')->all());
     }
 
     public function render()
@@ -25,7 +26,7 @@ class Bell extends Component
 
         return view('livewire.notifications.bell', [
             'items' => Notification::visibleTo($user)->latest()->limit(5)->get(),
-            'unread' => Notification::visibleTo($user)->unread()->count(),
+            'unread' => Notification::visibleTo($user)->unreadBy($user)->count(),
         ]);
     }
 }
