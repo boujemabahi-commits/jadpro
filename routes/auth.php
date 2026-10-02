@@ -13,3 +13,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('logout', Logout::class)->name('logout');
 });
+
+// Opening /logout directly (refresh, back button, old bookmark) must not show an
+// error or a blank page: send the visitor to the right place instead.
+Route::get('logout', fn () => redirect()->route(auth()->check() ? 'dashboard' : 'login'));
