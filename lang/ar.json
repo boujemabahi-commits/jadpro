@@ -8,5 +8,6 @@
     "This password reset link will expire in :count minutes.": "صلاحية رابط إعادة التعيين هذا تنتهي بعد :count دقيقة.",
     "If you did not request a password reset, no further action is required.": "إذا لم تطلب إعادة تعيين كلمة المرور، لا داعي لاتخاذ أي إجراء.",
     "If you're having trouble clicking the \":actionText\" button, copy and paste the URL below\ninto your web browser:": "إذا واجهت صعوبة في الضغط على زر \":actionText\"، انسخ الرابط أدناه والصقه في متصفحك:",
-    "All rights reserved.": "جميع الحقوق محفوظة."
+    "All rights reserved.": "جميع الحقوق محفوظة.",
+    "{1} :count طالب|[0,*] :count طالب": "{1} :count طالب|[0,*] :count طالب"
 }

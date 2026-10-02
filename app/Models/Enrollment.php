@@ -46,6 +46,7 @@ class Enrollment extends Model
         'price',
         'discount',
         'duration_months',
+        'package_id',
         'remaining',
         'status',
     ];
@@ -60,7 +61,44 @@ class Enrollment extends Model
 
     public function getPackLabelAttribute(): string
     {
+        // A named package shows its own name; otherwise the generic duration label.
+        if ($this->package_id && $this->package) {
+            return $this->package->name;
+        }
+
         return __(self::PACKS[(int) $this->duration_months] ?? 'باقة :months أشهر', ['months' => $this->duration_months]);
+    }
+
+    /** Paid as a package (named package or any multi-month duration), not month by month. */
+    public function getIsPackAttribute(): bool
+    {
+        return $this->package_id !== null || (int) $this->duration_months > 1;
+    }
+
+    public function package()
+    {
+        return $this->belongsTo(Package::class)->withTrashed();
+    }
+
+    public function scopeMonthly(Builder $query): Builder
+    {
+        return $query->whereNull('package_id')->where('duration_months', '<=', 1);
+    }
+
+    public function scopePack(Builder $query): Builder
+    {
+        return $query->where(fn ($q) => $q->whereNotNull('package_id')->orWhere('duration_months', '>', 1));
+    }
+
+    /** Filter: '' all · 'monthly' · 'pack' · a package id (numeric string). */
+    public function scopePlanFilter(Builder $query, ?string $plan): Builder
+    {
+        return match (true) {
+            $plan === 'monthly' => $query->monthly(),
+            $plan === 'pack' => $query->pack(),
+            $plan !== null && ctype_digit($plan) => $query->where('package_id', (int) $plan),
+            default => $query,
+        };
     }
 
     public function getIsOverdueAttribute(): bool

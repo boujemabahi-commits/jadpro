@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             ReferenceDataSeeder::class,
             StudentSeeder::class,
             EnrollmentSeeder::class,
+            PackageSeeder::class,
             ScheduleSlotSeeder::class,
             AttendanceSeeder::class,
             PaymentSeeder::class,

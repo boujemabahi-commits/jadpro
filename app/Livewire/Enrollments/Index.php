@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Group;
 use App\Models\Notification;
+use App\Models\Package;
 use App\Models\Student;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Url;
@@ -24,6 +25,10 @@ class Index extends Component
 
     #[Url(as: 'status', history: true)]
     public string $statusFilter = '';
+
+    /** '' all · monthly · pack · a package id */
+    #[Url(as: 'plan', history: true)]
+    public string $planFilter = '';
 
     public bool $showModal = false;
 
@@ -56,6 +61,14 @@ class Index extends Component
 
     public $duration_months = 1;
 
+    /**
+     * Subscription type chosen in the form: 'm' = monthly, 'p{id}' = one of the center's
+     * packages, 'd{n}' = a custom n-month package. Drives duration_months / package_id / price.
+     */
+    public string $plan = 'm';
+
+    public ?int $package_id = null;
+
     protected function rules(): array
     {
         $tenantId = auth()->user()->tenant_id;
@@ -87,6 +100,7 @@ class Index extends Component
             'discount' => ['required', 'integer', 'min:0', 'lte:price'],
             'paid' => ['required', 'integer', 'min:0'],
             'duration_months' => ['required', 'integer', Rule::in(array_keys(Enrollment::PACKS))],
+            'package_id' => ['nullable', Rule::exists('packages', 'id')->where('tenant_id', $tenantId)->whereNull('deleted_at')],
         ];
     }
 
@@ -129,22 +143,48 @@ class Index extends Component
         }
     }
 
-    /** Changing the package recomputes the suggested price and due date. */
-    public function updatedDurationMonths($value): void
+    /** Choosing a subscription type sets the duration, the package and the suggested price/due date. */
+    public function updatedPlan($value): void
     {
-        if ($this->editingId) {
-            return;
+        $this->applyPlan((string) $value, recomputeDates: ! $this->editingId);
+    }
+
+    protected function applyPlan(string $plan, bool $recomputeDates = true): void
+    {
+        $package = null;
+        if (str_starts_with($plan, 'p') && ctype_digit(substr($plan, 1))) {
+            $package = Package::find((int) substr($plan, 1));
         }
 
-        $months = max(1, (int) $value);
+        if ($package) {
+            $this->package_id = $package->id;
+            $this->duration_months = $package->duration_months;
+        } elseif (str_starts_with($plan, 'd') && ctype_digit(substr($plan, 1))) {
+            $this->package_id = null;
+            $this->duration_months = max(1, min(12, (int) substr($plan, 1)));
+        } else {
+            $this->plan = 'm';
+            $this->package_id = null;
+            $this->duration_months = 1;
+        }
 
+        $this->suggestPrice();
+
+        if ($recomputeDates && $this->date) {
+            $this->due_date = \Carbon\Carbon::parse($this->date)->addMonths(max(1, (int) $this->duration_months))->toDateString();
+        }
+    }
+
+    /** Suggested price: the package's price for the course, else monthly price × months. */
+    protected function suggestPrice(): void
+    {
         $course = $this->course_id ? Course::find($this->course_id) : null;
-        if ($course) {
-            $this->price = (int) $course->price * $months;
-        }
+        $package = $this->package_id ? Package::find($this->package_id) : null;
 
-        if ($this->date) {
-            $this->due_date = \Carbon\Carbon::parse($this->date)->addMonths($months)->toDateString();
+        if ($package) {
+            $this->price = $package->priceFor($course);
+        } elseif ($course) {
+            $this->price = (int) $course->price * max(1, (int) $this->duration_months);
         }
     }
 
@@ -163,6 +203,11 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatingPlanFilter(): void
+    {
+        $this->resetPage();
+    }
+
     /** Course drives the group list, the eligible students and the default price. */
     public function updatedCourseId($value): void
     {
@@ -172,14 +217,19 @@ class Index extends Component
             $this->group_id = null;
         }
 
+        // A package reserved for another course no longer applies.
+        if ($this->package_id && ($p = Package::find($this->package_id)) && $p->course_id && $p->course_id !== ($course?->id)) {
+            $this->plan = 'm';
+            $this->package_id = null;
+            $this->duration_months = 1;
+        }
+
         if (! $this->editingId) {
             if (! $this->pinnedStudentId) {
                 $this->student_id = null;
             }
             $this->studentSearch = '';
-            if ($course) {
-                $this->price = (int) $course->price * max(1, (int) $this->duration_months);
-            }
+            $this->suggestPrice();
         }
     }
 
@@ -205,6 +255,8 @@ class Index extends Component
         $this->discount = (int) $enrollment->discount;
         $this->paid = $enrollment->paid;
         $this->duration_months = (int) $enrollment->duration_months;
+        $this->package_id = $enrollment->package_id;
+        $this->plan = $enrollment->package_id ? 'p'.$enrollment->package_id : ((int) $enrollment->duration_months > 1 ? 'd'.(int) $enrollment->duration_months : 'm');
         $this->showModal = true;
     }
 
@@ -217,7 +269,7 @@ class Index extends Component
 
     protected function resetForm(): void
     {
-        $this->reset(['studentSearch', 'pinnedStudentId', 'student_id', 'course_id', 'group_id', 'date', 'due_date', 'price', 'discount', 'paid', 'duration_months']);
+        $this->reset(['studentSearch', 'pinnedStudentId', 'student_id', 'course_id', 'group_id', 'date', 'due_date', 'price', 'discount', 'paid', 'duration_months', 'plan', 'package_id']);
     }
 
     public function save(): void
@@ -233,6 +285,7 @@ class Index extends Component
             'price' => (int) $data['price'],
             'discount' => (int) $data['discount'],
             'duration_months' => (int) $data['duration_months'],
+            'package_id' => $data['package_id'] ?: null,
         ] + Enrollment::settle((int) $data['price'], (int) $data['discount'], (int) $data['paid']);
 
         if ($this->editingId) {
@@ -296,7 +349,8 @@ class Index extends Component
             ->when($this->statusFilter === 'overdue',
                 fn ($q) => $q->overdue(),
                 fn ($q) => $q->statusFilter($this->statusFilter))
-            ->with(['student', 'course', 'group'])
+            ->planFilter($this->planFilter ?: null)
+            ->with(['student', 'course', 'group', 'package'])
             ->latest('date')->latest('id')
             ->paginate(12);
 
@@ -348,6 +402,13 @@ class Index extends Component
             'preview' => $preview,
             'statuses' => Enrollment::STATUSES,
             'packOptions' => Enrollment::PACKS,
+            // The center's active packages usable with the chosen course (+ the one already on
+            // the enrollment being edited, even if it was deactivated since).
+            'packages' => Package::query()
+                ->where(fn ($q) => $q->where(fn ($a) => $a->active()->forCourse($this->course_id ? (int) $this->course_id : null))
+                    ->when($this->package_id, fn ($q) => $q->orWhere('id', $this->package_id)))
+                ->orderBy('duration_months')->get(),
+            'allPackages' => Package::orderBy('duration_months')->get(['id', 'name']),
         ])->extends('layouts.app')->section('content')->title(__('التسجيلات'));
     }
 }
