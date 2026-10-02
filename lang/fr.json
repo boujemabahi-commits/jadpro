@@ -672,5 +672,19 @@
     "باقة بمدة مخصصة": "Forfait à durée personnalisée",
     "يقترح السعر تلقائياً حسب الباقة (قابل للتعديل يدوياً)": "Le prix est proposé selon le forfait (modifiable)",
     "إدارة الباقات": "Gérer les forfaits",
-    "{1} :count طالب|[0,*] :count طالب": "{1} :count élève|[0,*] :count élèves"
+    "{1} :count طالب|[0,*] :count طالب": "{1} :count élève|[0,*] :count élèves",
+    "لا يمكن حذف هذه الدورة لأنها مرتبطة بطلاب أو مجموعات أو تسجيلات. انقل الطلاب أو غيّر حالتها إلى «متوقف مؤقتاً» بدلاً من الحذف.": "Impossible de supprimer ce cours : il est lié à des élèves, des groupes ou des inscriptions. Déplacez les élèves ou passez son statut à « Suspendu temporairement » au lieu de le supprimer.",
+    "لا يمكن حذف هذه المجموعة لأن فيها طلاباً. انقلهم إلى مجموعة أخرى أولاً، أو غيّر حالتها إلى «متوقف مؤقتاً».": "Impossible de supprimer ce groupe : il contient des élèves. Déplacez-les d’abord vers un autre groupe, ou passez son statut à « Suspendu temporairement ».",
+    "محاولات كثيرة. حاول مرة أخرى بعد :minutes دقيقة.": "Trop de tentatives. Réessayez dans :minutes min.",
+    "اترك الحقول فارغة إذا كنت لا تريد تغييرها. تغيير كلمة المرور أو البريد الإلكتروني يتطلب إدخال كلمة المرور الحالية.": "Laissez les champs vides pour ne rien changer. Changer le mot de passe ou l’e-mail nécessite le mot de passe actuel.",
+    "أداء :amount": "Paiement de :amount",
+    "لا يوجد نشاط بعد": "Aucune activité pour l’instant",
+    "تصل الإشعارات تلقائياً، وكل مستخدم يرى فقط ما يخص صلاحياته.": "Les notifications arrivent automatiquement ; chaque utilisateur ne voit que celles liées à ses permissions.",
+    "عند كل تسجيل جديد في دورة": "À chaque nouvelle inscription à un cours",
+    "عند تسجيل دفعة جديدة من طالب": "À chaque nouveau paiement d’un élève",
+    "مصروف جديد": "Nouvelle dépense",
+    "عند تسجيل مصروف جديد": "À chaque nouvelle dépense",
+    "عند صرف أجرة أستاذ": "Au paiement d’un salaire d’enseignant",
+    "تصلك": "Vous les recevez",
+    "لا تخص صلاحياتك": "Hors de vos permissions"
 }

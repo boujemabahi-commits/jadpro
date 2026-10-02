@@ -2,8 +2,12 @@
 
 namespace App\Livewire\Courses;
 
+use App\Livewire\Concerns\DropsDeletedReferences;
 use App\Models\Course;
+use App\Models\Enrollment;
 use App\Models\Group;
+use App\Models\Package;
+use App\Models\ScheduleSlot;
 use App\Models\Student;
 use App\Models\Teacher;
 use Illuminate\Validation\Rule;
@@ -13,7 +17,7 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithPagination;
+    use DropsDeletedReferences, WithPagination;
 
     public const STATUSES = ['نشط', 'جديد', 'متوقف مؤقتاً'];
 
@@ -49,7 +53,7 @@ class Index extends Component
             'name' => ['required', 'string', 'min:2', 'max:255'],
             'level' => ['nullable', 'string', 'max:255'],
             'teacher_id' => ['nullable', Rule::exists('teachers', 'id')->where('tenant_id', auth()->user()->tenant_id)->whereNull('deleted_at')],
-            'price' => ['required', 'integer', 'min:0'],
+            'price' => ['required', 'integer', 'min:0', 'max:10000000'],
             'status' => ['required', 'in:'.implode(',', self::STATUSES)],
         ];
     }
@@ -93,7 +97,7 @@ class Index extends Component
         $this->editingId = $course->id;
         $this->name = $course->name;
         $this->level = (string) $course->level;
-        $this->teacher_id = $course->teacher_id;
+        $this->teacher_id = $this->existingId(Teacher::class, $course->teacher_id);
         $this->price = (int) $course->price;
         $this->status = $course->status;
         $this->showModal = true;
@@ -140,7 +144,23 @@ class Index extends Component
     public function delete(): void
     {
         if ($this->confirmingDeleteId) {
-            Course::findOrFail($this->confirmingDeleteId)->delete();
+            $course = Course::findOrFail($this->confirmingDeleteId);
+
+            // A course still holding students, groups or enrollments can't go: their
+            // records would point at nothing and stop being editable.
+            $inUse = Student::where('course_id', $course->id)->exists()
+                || Group::where('course_id', $course->id)->exists()
+                || Enrollment::where('course_id', $course->id)->exists();
+            if ($inUse) {
+                $this->confirmingDeleteId = null;
+                $this->dispatch('toast', message: __('لا يمكن حذف هذه الدورة لأنها مرتبطة بطلاب أو مجموعات أو تسجيلات. انقل الطلاب أو غيّر حالتها إلى «متوقف مؤقتاً» بدلاً من الحذف.'));
+
+                return;
+            }
+
+            ScheduleSlot::where('course_id', $course->id)->delete();
+            Package::where('course_id', $course->id)->update(['is_active' => false]);
+            $course->delete();
             $this->dispatch('toast', message: __('تم حذف الدورة بنجاح'));
         }
         $this->confirmingDeleteId = null;

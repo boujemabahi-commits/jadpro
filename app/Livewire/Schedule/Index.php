@@ -2,16 +2,19 @@
 
 namespace App\Livewire\Schedule;
 
+use App\Livewire\Concerns\DropsDeletedReferences;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\ScheduleSlot;
 use App\Models\Teacher;
 use Illuminate\Validation\Rule;
-use Livewire\Component;
 use Livewire\Attributes\Url;
+use Livewire\Component;
 
 class Index extends Component
 {
+    use DropsDeletedReferences;
+
     #[Url(as: 'teacher', history: true)]
     public string $teacherFilter = '';
 
@@ -118,9 +121,9 @@ class Index extends Component
         $this->editingId = $slot->id;
         $this->day = $slot->day;
         $this->time = $slot->time;
-        $this->course_id = $slot->course_id;
-        $this->group_id = $slot->group_id;
-        $this->teacher_id = $slot->teacher_id;
+        $this->course_id = $this->existingId(Course::class, $slot->course_id);
+        $this->group_id = $this->existingId(Group::class, $slot->group_id);
+        $this->teacher_id = $this->existingId(Teacher::class, $slot->teacher_id);
         $this->room = (string) $slot->room;
         $this->showModal = true;
     }

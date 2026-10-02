@@ -36,7 +36,12 @@ Route::get('/lang/{locale}', function (string $locale) {
         Auth::user()->forceFill(['locale' => $locale])->save();
     }
 
-    return redirect()->back();
+    // Back to the page the visitor came from, but only on this site: the Referer
+    // header is client-controlled and must not turn this into an open redirect.
+    $previous = url()->previous();
+    $sameSite = parse_url($previous, PHP_URL_HOST) === request()->getHost();
+
+    return redirect($sameSite ? $previous : '/');
 })->name('lang.switch');
 
 // Public: a prospective center asks to join. Creates a request only (see Phase 10).

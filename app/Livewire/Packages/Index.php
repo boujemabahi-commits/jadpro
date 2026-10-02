@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Packages;
 
+use App\Livewire\Concerns\DropsDeletedReferences;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Package;
@@ -16,7 +17,7 @@ use Livewire\WithPagination;
  */
 class Index extends Component
 {
-    use WithPagination;
+    use DropsDeletedReferences, WithPagination;
 
     /** packages | students */
     #[Url(history: true)]
@@ -62,7 +63,7 @@ class Index extends Component
             'duration_months' => ['required', 'integer', 'min:2', 'max:12'],
             'course_id' => ['nullable', Rule::exists('courses', 'id')->where('tenant_id', $tenantId)->whereNull('deleted_at')],
             'pricing' => ['required', Rule::in(['fixed', 'discount'])],
-            'price' => ['exclude_unless:pricing,fixed', 'required', 'integer', 'min:0'],
+            'price' => ['exclude_unless:pricing,fixed', 'required', 'integer', 'min:0', 'max:10000000'],
             'discount_percent' => ['exclude_unless:pricing,discount', 'required', 'integer', 'min:0', 'max:100'],
             'description' => ['nullable', 'string', 'max:500'],
             'is_active' => ['boolean'],
@@ -118,7 +119,7 @@ class Index extends Component
         $this->editingId = $p->id;
         $this->name = $p->name;
         $this->duration_months = $p->duration_months;
-        $this->course_id = (string) ($p->course_id ?? '');
+        $this->course_id = (string) ($this->existingId(Course::class, $p->course_id) ?? '');
         $this->pricing = $p->price !== null ? 'fixed' : 'discount';
         $this->price = $p->price ?? '';
         $this->discount_percent = $p->discount_percent;

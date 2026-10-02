@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Enrollments;
 
+use App\Livewire\Concerns\DropsDeletedReferences;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Group;
@@ -15,7 +16,7 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithPagination;
+    use DropsDeletedReferences, WithPagination;
 
     #[Url(as: 'q', history: true)]
     public string $search = '';
@@ -90,15 +91,15 @@ class Index extends Component
                 Rule::exists('groups', 'id')->where('tenant_id', $tenantId)->whereNull('deleted_at')
                     ->when($this->course_id, fn ($rule) => $rule->where('course_id', $this->course_id)),
             ],
-            'date' => ['required', 'date'],
-            'due_date' => ['nullable', 'date', function ($attribute, $value, $fail) {
+            'date' => ['required', 'date', 'after_or_equal:2000-01-01', 'before:2100-01-01'],
+            'due_date' => ['nullable', 'date', 'before:2100-01-01', function ($attribute, $value, $fail) {
                 if ($value && $this->date && $value < $this->date) {
                     $fail(__('يجب أن يكون تاريخ الاستحقاق بعد تاريخ التسجيل أو مساوياً له.'));
                 }
             }],
-            'price' => ['required', 'integer', 'min:0'],
+            'price' => ['required', 'integer', 'min:0', 'max:10000000'],
             'discount' => ['required', 'integer', 'min:0', 'lte:price'],
-            'paid' => ['required', 'integer', 'min:0'],
+            'paid' => ['required', 'integer', 'min:0', 'max:10000000'],
             'duration_months' => ['required', 'integer', Rule::in(array_keys(Enrollment::PACKS))],
             'package_id' => ['nullable', Rule::exists('packages', 'id')->where('tenant_id', $tenantId)->whereNull('deleted_at')],
         ];
@@ -247,8 +248,8 @@ class Index extends Component
         $enrollment = Enrollment::findOrFail($id);
         $this->editingId = $enrollment->id;
         $this->student_id = $enrollment->student_id;
-        $this->course_id = $enrollment->course_id;
-        $this->group_id = $enrollment->group_id;
+        $this->course_id = $this->existingId(Course::class, $enrollment->course_id);
+        $this->group_id = $this->existingId(Group::class, $enrollment->group_id);
         $this->date = $enrollment->date->toDateString();
         $this->due_date = $enrollment->due_date?->toDateString() ?? '';
         $this->price = (int) $enrollment->price;
@@ -309,6 +310,7 @@ class Index extends Component
                 'icon' => 'user-round-plus',
                 'tone' => 'brand',
                 'category' => __('التسجيلات'),
+                'permission' => 'manage-enrollments',
             ]);
             $this->dispatch('notification-created');
             $this->dispatch('toast', message: __('تم تسجيل الطالب بنجاح'));

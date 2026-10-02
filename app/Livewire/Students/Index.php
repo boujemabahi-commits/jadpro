@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Students;
 
+use App\Livewire\Concerns\DropsDeletedReferences;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Student;
@@ -12,7 +13,7 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithPagination;
+    use DropsDeletedReferences, WithPagination;
 
     #[Url(as: 'q', history: true)]
     public string $search = '';
@@ -123,7 +124,7 @@ class Index extends Component
         $this->phone = $student->phone;
         $this->city = (string) $student->city;
         $this->guardian_phone = (string) $student->guardian_phone;
-        $this->course_id = $student->course_id;
+        $this->course_id = $this->existingId(Course::class, $student->course_id);
         $this->enrollment_status = $student->enrollment_status;
         $this->financial_status = $student->financial_status;
         $this->showModal = true;
